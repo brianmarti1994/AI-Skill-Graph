@@ -1,7 +1,16 @@
 # 🔍 AI Skill Graph
 
 <img width="600" height="400" alt="image" src="https://github.com/user-attachments/assets/783e1ca8-0564-4f7b-aec1-220b18f40083" />
-
+<p align="center">
+<a href="https://youtu.be/hrR9PUL-Ge0" target="_blank">
+  <img
+    width="400"
+    height="280"
+    alt="Watch demo video"
+    src="https://github.com/user-attachments/assets/644f15e3-73e2-4cfd-a18e-0dd86b844792"
+  />
+</a>
+</p>
 
 > **AI-powered CV analysis & skill matching platform**  
 > Upload a resume, define a target role, and instantly get:
