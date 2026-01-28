@@ -1,0 +1,355 @@
+﻿/* Match Analyzer - Page CSS (manual-scoped; no razor.css issues) */
+.ma-root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --border: #e6e8ef;
+    --text: #101828;
+    --muted: #667085;
+    --shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
+    --shadow2: 0 2px 10px rgba(16, 24, 40, 0.06);
+    --radius: 18px;
+    --pad: 16px;
+    --gap: 16px;
+    color: var(--text);
+}
+
+    .ma-root .page {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 18px 14px 26px;
+    }
+
+    .ma-root .topbar {
+        margin-bottom: 14px;
+    }
+
+    .ma-root .title {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 900;
+        letter-spacing: .2px;
+    }
+
+    .ma-root .sub {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: .95rem;
+    }
+
+    /* Layout: Input | Result | Repo; Chart spans left+center */
+    .ma-root .layout {
+        display: grid;
+        grid-template-columns: 340px 1fr 300px;
+        grid-template-rows: auto 340px;
+        grid-template-areas:
+            "input result repo"
+            "chart chart  repo";
+        gap: var(--gap);
+        align-items: stretch;
+    }
+
+@media (max-width: 1100px) {
+    .ma-root .layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        grid-template-areas:
+            "input"
+            "result"
+            "repo"
+            "chart";
+    }
+}
+
+/* Card */
+.ma-root .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow2);
+    padding: var(--pad);
+}
+
+.ma-root .inputCard {
+    grid-area: input;
+}
+
+.ma-root .resultCard {
+    grid-area: result;
+}
+
+.ma-root .chartCard {
+    grid-area: chart;
+}
+
+.ma-root .repoCard {
+    grid-area: repo;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Titles */
+.ma-root .sectionTitle {
+    margin: 0 0 10px;
+    font-size: 1.1rem;
+    font-weight: 900;
+}
+
+.ma-root .muted {
+    color: var(--muted);
+    font-size: .92rem;
+}
+
+/* Inputs */
+.ma-root .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+    .ma-root .field label {
+        font-size: .9rem;
+        font-weight: 800;
+        color: #344054;
+    }
+
+.ma-root .input {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-size: .95rem;
+    outline: none;
+    background: #fff;
+}
+
+    .ma-root .input:focus {
+        border-color: #9dbbff;
+        box-shadow: 0 0 0 4px rgba(157,187,255,.25);
+    }
+
+/* Buttons */
+.ma-root .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.ma-root .btn {
+    border: 1px solid #111827;
+    background: #111827;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 900;
+}
+
+.ma-root .btnSecondary {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: #111827;
+}
+
+.ma-root .btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.ma-root .error {
+    background: #fff2f2;
+    border: 1px solid #ffd3d3;
+    color: #b42318;
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin-top: 12px;
+    white-space: pre-wrap;
+    font-size: .9rem;
+}
+
+/* Result header + KPI */
+.ma-root .resultHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.ma-root .name {
+    font-size: 1.3rem;
+    font-weight: 1000;
+    margin: 0;
+}
+
+.ma-root .small {
+    color: var(--muted);
+    font-size: .85rem;
+    margin-top: 4px;
+}
+
+.ma-root .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-weight: 900;
+    font-size: .88rem;
+}
+
+.ma-root .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    display: inline-block;
+}
+
+.ma-root .pill-green {
+    background: #ecfdf3;
+    border-color: #abefc6;
+    color: #067647;
+}
+
+.ma-root .pill-yellow {
+    background: #fffaeb;
+    border-color: #fedf89;
+    color: #b54708;
+}
+
+.ma-root .pill-red {
+    background: #fef3f2;
+    border-color: #fecdca;
+    color: #b42318;
+}
+
+.ma-root .kpis {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+@media (max-width: 520px) {
+    .ma-root .kpis {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ma-root .kpi {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px;
+    background: #fbfbfd;
+}
+
+    .ma-root .kpi .label {
+        font-size: .8rem;
+        color: var(--muted);
+        font-weight: 800;
+    }
+
+    .ma-root .kpi .value {
+        font-size: 1.25rem;
+        font-weight: 1000;
+        margin-top: 4px;
+    }
+
+/* Repo column: header + scroll list */
+.ma-root .repoTitleBox {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    font-weight: 1000;
+    background: #fbfbfd;
+    text-align: center;
+    box-shadow: var(--shadow2);
+}
+
+.ma-root .repoBody {
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px;
+    background: #fff;
+    overflow: auto;
+    flex: 1;
+}
+
+/* Make repo column feel stable while scrolling */
+@media (min-width: 1100px) {
+    .ma-root .repoCard {
+        position: sticky;
+        top: 12px;
+        height: calc(100vh - 24px);
+    }
+
+    .ma-root .repoBody {
+        min-height: 0;
+    }
+}
+
+.ma-root .repoList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ma-root .repoItem {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    background: #fbfbfd;
+}
+
+.ma-root .repoName {
+    font-weight: 1000;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ma-root .repoMeta {
+    color: var(--muted);
+    font-size: .86rem;
+    margin-top: 6px;
+    line-height: 1.25rem;
+}
+
+/* Language chips */
+.ma-root .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.ma-root .chip {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: .78rem;
+    font-weight: 800;
+    color: #344054;
+}
+
+/* Chart */
+.ma-root .chartWrap {
+    height: 300px;
+}
+
+@media (max-width: 1100px) {
+    .ma-root .chartWrap {
+        height: 360px;
+    }
+}

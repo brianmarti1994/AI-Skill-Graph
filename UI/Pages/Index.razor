@@ -1,0 +1,295 @@
+﻿@page "/"
+@using System.Net.Http.Headers
+@using System.Text.Json
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+   
+<div class="ma-root">
+<div class="page">
+    <div class="topbar">
+        <div>
+            <h1 class="title">AI Skill Graph</h1>
+            <p class="sub">Upload a CV, define a role prompt, and get AI-based matching + skill chart.</p>
+        </div>
+    </div>
+
+    <div class="layout">
+
+        <!-- INPUT SECTION (Left) -->
+        <div class="card inputCard">
+            <h3 class="sectionTitle">Input Section</h3>
+
+            <div class="field">
+                <label>Target role prompt</label>
+                <input class="input" @bind="TargetRolePrompt" placeholder='e.g. ".NET developer"' />
+                <div class="muted">Tip: Be specific (e.g. “Senior .NET Web API + Azure”).</div>
+            </div>
+
+            <div class="field">
+                <label>Must-have skills CSV (optional)</label>
+                <input class="input" @bind="MustHaveCsv" placeholder="C#,.NET Core,SQL,Azure" />
+                <div class="muted">If empty, we’ll use sensible defaults based on your role prompt.</div>
+            </div>
+
+            <div class="field">
+                <label>Candidate CV file (PDF/DOCX/TXT)</label>
+                <InputFile OnChange="OnFileSelected" />
+                @if (_file is not null)
+                {
+                    <div class="muted">
+                        Selected: <b>@_file.Name</b> (@Math.Round(_file.Size / 1024.0, 1) KB)
+                    </div>
+                }
+            </div>
+
+            <div class="actions">
+                <button class="btn" @onclick="Analyze" disabled="@(!_ready || _busy)">Analyze</button>
+                <button class="btn btnSecondary" @onclick="Clear" disabled="@(_busy)">Clear</button>
+
+                @if (_busy)
+                {
+                    <span class="muted">⏳ Processing…</span>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="error">@_error</div>
+            }
+        </div>
+
+        <!-- RESULT SECTION (Center) -->
+        <div class="card resultCard">
+            <h3 class="sectionTitle">Result Section</h3>
+
+            @if (_result is null)
+            {
+                <div class="muted">Upload a CV and click <b>Analyze</b> to see results.</div>
+            }
+            else
+            {
+                <div class="resultHeader">
+                    <div>
+                        <p class="name">@_result.FullName</p>
+                        <div class="small">Candidate ID: @_result.CandidateId</div>
+                    </div>
+
+                    <span class="@GetPillClass(_result.TrafficLight)">
+                        <span class="dot" style="background:@GetDotColor(_result.TrafficLight)"></span>
+                       @*  @_result.TrafficLight *@
+                    </span>
+                </div>
+
+                <div class="kpis">
+                    <div class="kpi">
+                        <div class="label">Total Experience</div>
+                        <div class="value">@_result.TotalYearsExperience yrs</div>
+                    </div>
+                    <div class="kpi">
+                        <div class="label">Match</div>
+                        <div class="value">@_result.MatchPercentage%</div>
+                    </div>
+                    <div class="kpi">
+                        <div class="label">Skills Parsed</div>
+                        <div class="value">@_result.SkillBars.Count</div>
+                    </div>
+                </div>
+
+                <div class="muted" style="margin-top: 12px;">
+                    Chart shows <b>Top 15</b> skills by years (keeps it readable).
+                </div>
+            }
+        </div>
+
+        <!-- GIT REPO (Right - spans both rows) -->
+        <div class="card repoCard">
+            <div class="repoTitleBox">Git Repo </div>
+
+            <div class="repoBody">
+                @if (_result is null)
+                {
+                    <div class="muted">List of Git repo will appear here after analysis.</div>
+                }
+                else if (_result.GithubRepos is null || _result.GithubRepos.Count == 0)
+                {
+                    <div class="muted">No GitHub repos found (or GitHub URL missing).</div>
+                }
+                else
+                {
+                    <ul class="repoList">
+                        @foreach (var r in _result.GithubRepos)
+                        {
+                            <li class="repoItem">
+                                <a class="repoName" href="@r.Url" target="_blank">@r.Name</a>
+
+                                @if (r.Languages is not null && r.Languages.Count > 0)
+                                {
+                                    <div class="repoMeta">
+                                        @string.Join(", ", r.Languages
+                                            .OrderByDescending(kv => kv.Value)
+                                            .Take(6)
+                                            .Select(kv => $"{kv.Key}:{kv.Value}"))
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="repoMeta">No language data.</div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+
+        <!-- SKILL GRAPH (Bottom - spans input + result) -->
+        <div class="card chartCard">
+            <h3 class="sectionTitle">Skill Graph</h3>
+
+            @if (_result is null)
+            {
+                <div class="muted">Chart will appear after analysis.</div>
+            }
+            else
+            {
+                <div class="chartWrap">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+</div>
+@code {
+    private string TargetRolePrompt { get; set; } = ".NET developer";
+    private string? MustHaveCsv { get; set; } = "C#,.NET Core,SQL,Azure";
+
+    private IBrowserFile? _file;
+    private bool _ready;
+    private bool _busy;
+    private AnalyzeCvResponse? _result;
+    private bool _renderChart;
+    private string? _error;
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        _file = e.File;
+        _ready = _file is not null;
+        _result = null;
+        _error = null;
+        _renderChart = false;
+    }
+
+    private async Task Analyze()
+    {
+        if (_file is null) return;
+
+        _busy = true;
+        _error = null;
+        _result = null;
+        _renderChart = false;
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+
+            var fileContent = new StreamContent(_file.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024));
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(_file.ContentType);
+            content.Add(fileContent, "file", _file.Name);
+
+            content.Add(new StringContent(TargetRolePrompt), "targetRolePrompt");
+            if (!string.IsNullOrWhiteSpace(MustHaveCsv))
+                content.Add(new StringContent(MustHaveCsv), "mustHaveCsv");
+
+            var resp = await Http.PostAsync("/api/cv/analyze", content);
+            var body = await resp.Content.ReadAsStringAsync();
+
+            if (!resp.IsSuccessStatusCode)
+            {
+                _error = $"API error: {(int)resp.StatusCode} {resp.ReasonPhrase}\n{body}";
+                return;
+            }
+
+            _result = JsonSerializer.Deserialize<AnalyzeCvResponse>(body,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (_result is not null)
+            {
+                _renderChart = true;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.ToString();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void Clear()
+    {
+        _file = null;
+        _ready = false;
+        _busy = false;
+        _result = null;
+        _renderChart = false;
+        _error = null;
+        TargetRolePrompt = ".NET developer";
+        MustHaveCsv = "C#,.NET Core,SQL,Azure";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_renderChart && _result is not null)
+        {
+            _renderChart = false;
+
+            // Top 15 for readability
+            var top = _result.SkillBars
+                .OrderByDescending(s => s.Years)
+                .Take(15)
+                .ToList();
+
+            var labels = top.Select(s => s.Skill).ToArray();
+            var data = top.Select(s => (double)s.Years).ToArray();
+
+            await JS.InvokeVoidAsync("cvCharts.renderBar", "skillsChart", labels, data);
+        }
+    }
+
+    private static string GetPillClass(string light)
+        => light?.ToLowerInvariant() switch
+        {
+            "green" => "pill pill-green",
+            "yellow" => "pill pill-yellow",
+            "red" => "pill pill-red",
+            _ => "pill"
+        };
+
+    private static string GetDotColor(string light)
+        => light?.ToLowerInvariant() switch
+        {
+            "green" => "#10b981",
+            "yellow" => "#f59e0b",
+            "red" => "#ef4444",
+            _ => "#9ca3af"
+        };
+
+    public sealed record AnalyzeCvResponse(
+        Guid CandidateId,
+        string FullName,
+        int TotalYearsExperience,
+        decimal MatchPercentage,
+        string TrafficLight,
+        IReadOnlyList<SkillBarPoint> SkillBars,
+        IReadOnlyList<GithubRepoSummary> GithubRepos
+    );
+
+    public sealed record SkillBarPoint(string Skill, decimal Years);
+
+    public sealed record GithubRepoSummary(string Name, string Url, IReadOnlyDictionary<string, long> Languages);
+}
