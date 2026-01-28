@@ -1,6 +1,4 @@
 # 🔍 AI Skill Graph
-
-<img width="600" height="400" alt="image" src="https://github.com/user-attachments/assets/783e1ca8-0564-4f7b-aec1-220b18f40083" />
 <p align="center">
 <a href="https://youtu.be/hrR9PUL-Ge0" target="_blank">
   <img
